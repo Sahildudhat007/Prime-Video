@@ -50,11 +50,6 @@ function Header() {
                                                     <span className='text-sm font-medium px-3.5'>TV shows</span>
                                                 </li>
                                             </Link>
-                                            <Link to="liveTv">
-                                                <li className='ml-[5px] rounded-lg hover:text-[#00050d] hover:bg-white/90  h-[42px] flex items-center justify-center'>
-                                                    <span className='text-sm font-medium px-3.5'>Live TV</span>
-                                                </li>
-                                            </Link>
                                         </ul>
                                         <div className='mx-3.5 bg-[#fff6] w-0.5 h-full'></div>
                                         <div className='ml-[5px] px-3.5'>
