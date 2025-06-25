@@ -10,7 +10,6 @@ import Footer from './Components/Footer/Footer';
 import Home from './Pages/Home/Home';
 import Movies from './Pages/Movies/Movies';
 import TVShows from './Pages/TVShows/TVShows';
-import LiveTV from './Pages/LiveTV/LiveTV';
 import AllMovies from './Components/AllMovies/AllMovies';
 import AllTvShow from './Components/AllTvShow/AllTvShow';
 import MovieDetails from './Components/MovieDetails/MovieDetails';
@@ -29,7 +28,6 @@ function App() {
           <Route path='/movie/:id' element={<MovieDetails />} />
           <Route path='/tvShows' element={<TVShows />} />
           <Route path='/tv/:id' element={<TvDetails />} />
-          <Route path='/liveTv' element={<LiveTV />} />
           <Route path='/movies/allMovies' element={<AllMovies />} />
           <Route path='/tvShows/allTvShow' element={<AllTvShow />} />
           <Route path='/searchbar' element={<Searchbar />} />
