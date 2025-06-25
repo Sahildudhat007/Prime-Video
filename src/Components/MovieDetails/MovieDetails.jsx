@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 
+// react skeleton
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
+
 // react icon
 import { MdOutlineClose } from "react-icons/md";
 
@@ -13,26 +17,46 @@ function MovieDetails() {
     const [movie, setMovie] = useState(null);
     const [trailerKey, setTrailerKey] = useState(null);
     const [showTrailer, setShowTrailer] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [director, setDirector] = useState([]);
+    const [writers, setWriters] = useState([]);
+    const [cast, setCast] = useState([]);
 
     useEffect(() => {
-        fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${API_KEY}&language=en-US`)
-            .then(res => res.json())
-            .then(data => setMovie(data))
-            .catch(err => console.error("Error fetching movie detail:", err));
+        const fetchMovie = async () => {
+            try {
+                const movieRes = await fetch(`https://api.themoviedb.org/3/movie/${id}?api_key=${API_KEY}&language=en-US`);
+                const movieData = await movieRes.json();
+                setMovie(movieData);
+                setLoading(false);
 
-        fetch(`https://api.themoviedb.org/3/movie/${id}/videos?api_key=${API_KEY}&language=en-US`)
-            .then(res => res.json())
-            .then(data => {
-                const trailer = data.results.find(
+                const trailerRes = await fetch(`https://api.themoviedb.org/3/movie/${id}/videos?api_key=${API_KEY}&language=en-US`);
+                const trailerData = await trailerRes.json();
+                const trailer = trailerData.results.find(
                     video => video.type === "Trailer" && video.site === "YouTube"
                 );
                 if (trailer) setTrailerKey(trailer.key);
-            })
-            .catch(err => console.error("Error fetching trailer:", err));
 
+                const creditsRes = await fetch(`https://api.themoviedb.org/3/movie/${id}/credits?api_key=${API_KEY}&language=en-US`);
+                const creditsData = await creditsRes.json();
+
+                const directorList = creditsData.crew.filter(person => person.job === "Director");
+                const writerList = creditsData.crew.filter(person => person.job === "Writer" || person.department === "Writing");
+                const castList = creditsData.cast.slice(0, 4);
+
+                setDirector(directorList);
+                setWriters(writerList);
+                setCast(castList);
+
+                setLoading(false);
+            } catch (error) {
+                console.error("Error fetching movie details or trailer:", error);
+                setLoading(false);
+            }
+        };
+
+        fetchMovie();
     }, [id]);
-
-    if (!movie) return <div className="text-white p-6">Loading...</div>;
 
     return (
         <>
@@ -41,39 +65,57 @@ function MovieDetails() {
                     <div className='flex flex-col text-gray-300 md:text-end text-sm space-y-8 font-sans'>
                         <div>
                             <h3 className='text-xs uppercase font-semibold tracking-widest mb-2 text-white'>Director</h3>
-                            <p>Joe Russo</p>
-                            <p>Anthony Russo</p>
+                            {loading ? <Skeleton count={2} /> : (
+                                <>
+                                    {director.map(d => (
+                                        <p key={d.id}>{d.name}</p>
+                                    ))}
+                                </>
+                            )}
                         </div>
 
                         <div>
                             <h3 className='text-xs uppercase font-semibold tracking-widest mb-2 text-white'>Cast</h3>
-                            <p>Chris Evans</p>
-                            <p>Scarlett Johansson</p>
-                            <p>Sebastian Stan</p>
-                            <p>Samuel L. Jackson</p>
+                            {loading ? <Skeleton count={4} /> : (
+                                <>
+                                    {cast.map(c => (
+                                        <p key={c.id}>{c.name}</p>
+                                    ))}
+                                </>
+                            )}
                         </div>
 
                         <div>
                             <h3 className='text-xs uppercase font-semibold tracking-widest mb-2 text-white'>Writer</h3>
-                            <p>Christopher Markus</p>
-                            <p>Stephen McFeely</p>
+                            {loading ? <Skeleton count={2} /> : (
+                                <>
+                                    {writers.map(w => (
+                                        <p key={w.id}>{w.name}</p>
+                                    ))}
+                                </>
+                            )}
                         </div>
                     </div>
 
                     <div className='flex flex-col space-y-4 font-sans'>
                         <div className='text-white text-xl md:text-2xl font-semibold'>
-                            <h1 className='truncate'>{movie.title}</h1>
+                            <h1 className='truncate'>
+                                {loading ? <Skeleton width={180} /> : movie.title}
+                            </h1>
                         </div>
 
                         <div className='flex flex-wrap gap-2 text-gray-300 text-xs md:text-sm font-semibold tracking-wide'>
-                            <span className='space-x-2'>
-                                <span>{movie.genres?.map(genre => genre.name).join(', ')}</span>
-                                <span>{movie.release_date}</span>
-                            </span>
+                            {loading
+                                ? <Skeleton width={200} height={20} />
+                                : <>
+                                    <span>{movie.genres?.map(genre => genre.name).join(', ')}</span>
+                                    <span>{movie.release_date}</span>
+                                </>
+                            }
                         </div>
 
                         <p className='text-gray-200 text-sm md:text-base max-w-prose leading-relaxed'>
-                            {movie.overview}
+                            {loading ? <Skeleton count={4} /> : movie.overview}
                         </p>
 
                         <div className='flex mt-6'>
@@ -115,7 +157,12 @@ function MovieDetails() {
                     </div>
 
                     <div className='flex justify-center items-start'>
-                        <img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} alt={movie.title} className="rounded-lg shadow-lg max-w-full h-auto object-cover" />
+                        {loading ? (
+                            <Skeleton height={400} width={260} borderRadius={12} />
+                        ) : (
+                            <img src={`https://image.tmdb.org/t/p/w500${movie.poster_path}`} alt={movie.title} className="rounded-lg shadow-lg max-w-full h-auto object-cover" />
+                        )}
+
                     </div>
                 </div>
             </div>

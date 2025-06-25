@@ -15,6 +15,7 @@ import AllMovies from './Components/AllMovies/AllMovies';
 import AllTvShow from './Components/AllTvShow/AllTvShow';
 import MovieDetails from './Components/MovieDetails/MovieDetails';
 import TvDetails from './Components/TvDetails/TvDetails';
+import Searchbar from './Components/Searchbar/Searchbar';
 
 function App() {
 
@@ -31,6 +32,7 @@ function App() {
           <Route path='/liveTv' element={<LiveTV />} />
           <Route path='/movies/allMovies' element={<AllMovies />} />
           <Route path='/tvShows/allTvShow' element={<AllTvShow />} />
+          <Route path='/searchbar' element={<Searchbar />} />
         </Routes>
         <Footer />
       </BrowserRouter>

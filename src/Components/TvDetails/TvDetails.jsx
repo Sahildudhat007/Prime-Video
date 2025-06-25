@@ -13,28 +13,44 @@ function TvDetails() {
     const [tv, setTv] = useState(null);
     const [trailerKey, setTrailerKey] = useState(null);
     const [showTrailer, setShowTrailer] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [director, setDirector] = useState([]);
+    const [writers, setWriters] = useState([]);
+    const [cast, setCast] = useState([]);
 
     useEffect(() => {
-        fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}&language=en-US`)
-            .then(res => res.json())
-            .then(data => setTv(data))
-            .catch(err => console.error("Error fetching TV show detail:", err));
+        const fetchTvDetails = async () => {
+            try {
+                setLoading(true);
 
-        fetch(`https://api.themoviedb.org/3/tv/${id}/videos?api_key=${API_KEY}&language=en-US`)
-            .then(res => res.json())
-            .then(data => {
-                console.log("Video results:", data.results);
-                console.log("Fetched trailer data:", data);
-                const trailer = data.results.find(
-                    video => video.type === "Trailer" && video.site === "YouTube"
-                );
-                if (trailer) {
-                    setTrailerKey(trailer.key);
-                } else {
-                    console.warn("No trailer found for this TV show.");
-                }
-            })
-            .catch(err => console.error("Error fetching trailer:", err));
+                const tvRes = await fetch(`https://api.themoviedb.org/3/tv/${id}?api_key=${API_KEY}&language=en-US`);
+                const tvData = await tvRes.json();
+                setTv(tvData);
+
+                const trailerRes = await fetch(`https://api.themoviedb.org/3/tv/${id}/videos?api_key=${API_KEY}&language=en-US`);
+                const trailerData = await trailerRes.json();
+                const trailer = trailerData.results.find(video => video.type === "Trailer" && video.site === "YouTube");
+                if (trailer) setTrailerKey(trailer.key);
+
+                const creditsRes = await fetch(`https://api.themoviedb.org/3/tv/${id}/credits?api_key=${API_KEY}&language=en-US`);
+                const creditsData = await creditsRes.json();
+
+                const directors = creditsData.crew.filter(person => person.job === "Director");
+                const writersList = creditsData.crew.filter(person => person.department === "Writing");
+                const topCast = creditsData.cast.slice(0, 4);
+
+                setDirector(directors);
+                setWriters(writersList);
+                setCast(topCast);
+
+                setLoading(false);
+            } catch (err) {
+                console.error("Error fetching data:", err);
+                setLoading(false);
+            }
+        };
+
+        fetchTvDetails();
     }, [id]);
 
     if (!tv) return <div className="text-white p-6">Loading...</div>;
@@ -46,22 +62,35 @@ function TvDetails() {
                     <div className='flex flex-col text-gray-300 md:text-end text-sm space-y-8 font-sans'>
                         <div>
                             <h3 className='text-xs uppercase font-semibold tracking-widest mb-2 text-white'>Director</h3>
-                            <p>Joe Russo</p>
-                            <p>Anthony Russo</p>
+                            {loading ? <Skeleton count={2} /> : (
+                                <>
+                                    {director.map(d => (
+                                        <p key={d.id}>{d.name}</p>
+                                    ))}
+                                </>
+                            )}
                         </div>
 
                         <div>
                             <h3 className='text-xs uppercase font-semibold tracking-widest mb-2 text-white'>Cast</h3>
-                            <p>Chris Evans</p>
-                            <p>Scarlett Johansson</p>
-                            <p>Sebastian Stan</p>
-                            <p>Samuel L. Jackson</p>
+                            {loading ? <Skeleton count={4} /> : (
+                                <>
+                                    {cast.map(c => (
+                                        <p key={c.id}>{c.name}</p>
+                                    ))}
+                                </>
+                            )}
                         </div>
 
                         <div>
                             <h3 className='text-xs uppercase font-semibold tracking-widest mb-2 text-white'>Writer</h3>
-                            <p>Christopher Markus</p>
-                            <p>Stephen McFeely</p>
+                            {loading ? <Skeleton count={2} /> : (
+                                <>
+                                    {writers.map(w => (
+                                        <p key={w.id}>{w.name}</p>
+                                    ))}
+                                </>
+                            )}
                         </div>
                     </div>
 
@@ -84,8 +113,7 @@ function TvDetails() {
                         <div className='flex mt-6'>
                             <button
                                 onClick={() => setShowTrailer(true)}
-                                className="bg-[#fff3] w-12 h-12 sm:w-14 sm:h-14 rounded-full hover:text-black hover:bg-white group cursor-pointer mr-2"
-                            >
+                                className="bg-[#fff3] w-12 h-12 sm:w-14 sm:h-14 rounded-full hover:text-black hover:bg-white group cursor-pointer mr-2">
                                 <div className="flex justify-center items-center text-white group-hover:text-black">
                                     <svg className="w-6 h-6 sm:w-8 sm:h-8" viewBox="0 0 24 24" height="24" width="24" role="img" aria-hidden="true">
                                         <title>Trailer</title>
@@ -97,8 +125,7 @@ function TvDetails() {
                                 </div>
                             </button>
                             <button
-                                className="bg-[#fff3] w-12 h-12 sm:w-14 sm:h-14 rounded-full hover:text-black hover:bg-white group cursor-pointer mr-2"
-                            >
+                                className="bg-[#fff3] w-12 h-12 sm:w-14 sm:h-14 rounded-full hover:text-black hover:bg-white group cursor-pointer mr-2">
                                 <div className="flex justify-center items-center text-white group-hover:text-black">
                                     <svg
                                         className="w-6 h-6 sm:w-8 sm:h-8"
@@ -138,8 +165,7 @@ function TvDetails() {
                         ></iframe>
                         <button
                             onClick={() => setShowTrailer(false)}
-                            className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-white text-black rounded-full text-sm font-semibold w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center hover:bg-gray-200 transition cursor-pointer"
-                        >
+                            className="absolute top-2 right-2 sm:top-4 sm:right-4 bg-white text-black rounded-full text-sm font-semibold w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center hover:bg-gray-200 transition cursor-pointer">
                             <MdOutlineClose className="text-xl sm:text-2xl" />
                         </button>
                     </div>
